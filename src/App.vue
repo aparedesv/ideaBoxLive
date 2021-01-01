@@ -6,32 +6,17 @@
       <h1 class="mb-5 text-4xl text-center">
         IdeaBox
       </h1>
-
       <!-- add idea -->
-      <section class="mb-6">
-        <form class="sm:flex">
-          <input
-            class="w-full p-3 sm:flex-auto"
-            type="text"
-            required
-            placeholder="add your idea"
-          />
-          <input
-            class="w-full p-2 bg-gray-600 text-white sm:flex-1"
-            type="submit"
-            value="Add Idea"
-          />
-        </form>
-        <p v-if="!user" class="user-actions">
-          Please <a @click="doLogin" href="#">Login</a> first
-        </p>
-        <p v-else class="user-actions">
-          Hi {{ user.displayName }}.<a @click="doLogout" href="#">Logout</a>
-        </p>
-      </section>
+      <AddIdea 
+        :user="user" 
+        @do-login="doLogin" 
+        @do-logout="doLogout" 
+        @add-idea="addIdea" 
+      />
       <!-- end add idea -->
-
+      <!-- app idea -->
       <AppIdea v-for="(idea, index) in ideas" :key="index" :idea="idea" />
+      <!-- end app idea -->
     </div>
     <!-- end main box -->
   </div>
@@ -39,10 +24,11 @@
 </template>
 
 <script>
+import AddIdea from "@/components/AddIdea.vue";
 import AppIdea from "@/components/AppIdea.vue";
 import seed from "@/seed.json";
 import { ref } from "vue";
-import { auth, firebase } from "@/firebase.js";
+import { auth, db, firebase } from "@/firebase.js";
 
 export default {
   name: "App",
@@ -64,16 +50,30 @@ export default {
       } catch (error) {
         console.error(error);
       }
-    }
+    };
+    const addIdea = async (data) => {
+      try {
+        await db.collection('ideas').add({
+          name: data.value,
+          user: user.value.uid,
+          userName: user.value.displayName,
+          votes: 0
+        });
+      } catch (error) {
+        console.error(error);
+      }
+    };
     return {
       ideas,
       user,
       doLogin,
-      doLogout
+      doLogout,
+      addIdea
     };
   },
   components: {
-    AppIdea
+    AddIdea,
+    AppIdea,
   }
 };
 </script>
