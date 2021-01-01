@@ -22,8 +22,10 @@
             value="Add Idea"
           />
         </form>
-        <p v-if="user">Please <a @click="doLogin" href="#">Login</a> first</p>
-        <p v-else>
+        <p v-if="!user" class="user-actions">
+          Please <a @click="doLogin" href="#">Login</a> first
+        </p>
+        <p v-else class="user-actions">
           Hi {{ user.displayName }}.<a @click="doLogout" href="#">Logout</a>
         </p>
       </section>
@@ -40,18 +42,34 @@
 import AppIdea from "@/components/AppIdea.vue";
 import seed from "@/seed.json";
 import { ref } from "vue";
-import { auth } from "@/firebase.js";
+import { auth, firebase } from "@/firebase.js";
 
 export default {
   name: "App",
   setup() {
     const ideas = ref(seed.ideas);
     let user = ref(null);
-    // auth.onAuthStateChanged(async auth => (user.value = auth ? auth : null));
-    console.log(auth);
+    auth.onAuthStateChanged(async auth => (user.value = auth ? auth : null));
+    const doLogin = async () => {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      try {
+        await auth.signInWithPopup(provider);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    const doLogout = async () => {
+      try {
+        await auth.signOut();
+      } catch (error) {
+        console.error(error);
+      }
+    }
     return {
       ideas,
-      user
+      user,
+      doLogin,
+      doLogout
     };
   },
   components: {
@@ -59,3 +77,15 @@ export default {
   }
 };
 </script>
+
+<style>
+  .user-actions {
+    @apply mt-2 text-center;
+  }
+  
+  .user-actions a {
+    font-weight: bold;
+    text-decoration: underline;
+  }
+
+</style>
